@@ -49,6 +49,7 @@ pub fn decode_texture(img: &[u8], width: u32, height: u32, format: &TextureForma
         TextureFormat::RGB888   => decode_rgb888(img, width, height),
         TextureFormat::RGBA5551 => decode_rgba5551(img, width, height),
         TextureFormat::RGB565   => decode_rgb565(img, width, height),
+        TextureFormat::RGBA4444 => decode_rgba4444(img, width, height),
         _ => unimplemented!("Decoding for the specified format is not implemented yet"),
     };
 
@@ -225,6 +226,52 @@ fn decode_rgb565(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
                 output[out_idx + 1] = g | (g >> 6);
                 output[out_idx + 2] = r | (r >> 5);
                 output[out_idx + 3] = 0xFF;
+
+                src_idx += bytes_per_pixel;
+            }
+        }
+    }
+    output
+}
+
+/// Decodes RGBA4444 PICA texture data into a `Vec<u8>` of RGBA texture data.
+///
+/// # Arguments
+///
+/// * `texture_data` - A byte slice containing the raw texture data.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the decoded RGBA data.
+///
+fn decode_rgba4444(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
+    println!("Decoding as RGBA4444");
+
+    let bytes_per_pixel = 16 / 8;
+    let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
+    let mut src_idx: usize = 0;
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for px in SWIZZLE_LUT {
+
+                let x = px & 7;
+                let y = (px - x) >> 3;
+
+                let out_idx = ((tx + x + (height - 1 - (ty + y)) * width) * 4) as usize;
+                let value = (texture_data[src_idx] as u16) | ((texture_data[src_idx + 1] as u16) << 8);
+
+                let r = ((value >>  4) & 0xF) as u8;
+                let g = ((value >>  8) & 0xF) as u8;
+                let b = ((value >> 12) & 0xF) as u8;
+                let a = (value & 0xF) as u8;
+
+                output[out_idx    ] = b | (b << 4);
+                output[out_idx + 1] = g | (g << 4);
+                output[out_idx + 2] = r | (r << 4);
+                output[out_idx + 3] = a | (a << 4);
 
                 src_idx += bytes_per_pixel;
             }
