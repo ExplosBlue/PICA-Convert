@@ -54,6 +54,7 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
         TextureFormat::L8       => encode_l8(&img, width, height),
         TextureFormat::A8       => encode_a8(&img, width, height),
         TextureFormat::LA44     => encode_la44(&img, width, height),
+        TextureFormat::L4       => encode_l4(&img, width, height),
         _ => unimplemented!("Encoding for the specified format is not implemented yet"),
     };
     Ok(output_texture)
@@ -581,6 +582,69 @@ fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
                 let a = pixel.0[3] >> 4;
 
                 output.extend([(l << 4) | a]);
+            }
+        }
+    }
+    output
+}
+
+/// Encodes an RGBA image as L4 PICA texture data.
+///
+/// # Arguments
+///
+/// * `img` - A reference to the input image (`RgbaImage`) to encode.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the encoded L4 data.
+///
+/// # Example
+///
+/// ```rust
+/// # use image::RgbaImage;
+/// # use pica_convert::pica_texture::encode::encode_l4;
+/// let img = RgbaImage::new(128, 128);
+/// let encoded = encode_l4(&img, 128, 128);
+/// assert_eq!(encoded.len(), 128 * 128);
+/// ```
+fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+    println!("Encoding as L4");
+
+    let mut output: Vec<u8> = vec![0; width as usize * height as usize];
+
+    let mut dst_index = 0;
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for &px in SWIZZLE_LUT.iter() {
+
+                let x = px & 7;
+                let y = (px >> 3) & 7;
+
+                let img_x = tx + x;
+                let img_y = ty + y;
+
+                if img_x >= width || img_y >= height {
+                    continue;
+                }
+
+                let pixel = img.get_pixel(img_x, img_y).to_rgba();
+
+                let r = pixel[0] as u32;
+                let g = pixel[1] as u32;
+                let b = pixel[2] as u32;
+
+                let l = (((r + g + b) / 3) >> 4) as u8;
+
+                let byte_index = dst_index >> 1;
+                let shift = (dst_index & 1) << 2;
+
+                output[byte_index] &= !(0xF << shift);
+                output[byte_index] |= (l & 0xF) << shift;
+
+                dst_index += 1;
             }
         }
     }
