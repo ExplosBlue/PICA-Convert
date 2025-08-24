@@ -50,6 +50,7 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
         TextureFormat::RGB565   => encode_rgb565(&img, width, height),
         TextureFormat::RGBA4444 => encode_rgba4444(&img, width, height),
         TextureFormat::LA88     => encode_la88(&img, width, height),
+        TextureFormat::HL8      => encode_hl8(&img, width, height),
         _ => unimplemented!("Encoding for the specified format is not implemented yet"),
     };
     Ok(output_texture)
@@ -365,6 +366,57 @@ pub fn encode_la88(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
                 let l = ((r + g + b) / 3) as u8;
 
                 output.extend([a, l]);
+            }
+        }
+    }
+    output
+}
+
+/// Encodes an RGBA image as HL8 PICA texture data.
+///
+/// # Arguments
+///
+/// * `img` - A reference to the input image (`RgbaImage`) to encode.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the encoded HL8 data.
+///
+/// # Example
+///
+/// ```rust
+/// # use image::RgbaImage;
+/// # use pica_convert::pica_texture::encode::encode_hl8;
+/// let img = RgbaImage::new(128, 128);
+/// let encoded = encode_hl8(&img, 128, 128);
+/// assert_eq!(encoded.len(), 128 * 128 * 2);
+/// ```
+pub fn encode_hl8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+    println!("Encoding as HL8");
+
+    let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for &px in SWIZZLE_LUT.iter() {
+
+                let x = px & 7;
+                let y = (px >> 3) & 7;
+
+                let img_x = tx + x;
+                let img_y = ty + y;
+
+                if img_x >= width || img_y >= height {
+                    continue;
+                }
+
+                let pixel = img.get_pixel(img_x, img_y);
+
+                let l = pixel[0];
+                let h = pixel[1];
+                output.extend([h, l]);
             }
         }
     }
