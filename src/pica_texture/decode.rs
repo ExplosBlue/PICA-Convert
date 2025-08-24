@@ -53,6 +53,7 @@ pub fn decode_texture(img: &[u8], width: u32, height: u32, format: &TextureForma
         TextureFormat::LA88     => decode_la88(img, width, height),
         TextureFormat::HL8      => decode_hl8(img, width, height),
         TextureFormat::L8       => decode_l8(img, width, height),
+        TextureFormat::A8       => decode_a8(img, width, height),
         _ => unimplemented!("Decoding for the specified format is not implemented yet"),
     };
 
@@ -402,3 +403,44 @@ pub fn decode_l8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
     }
     output
 }
+
+/// Decodes A8 PICA texture data into a `Vec<u8>` of RGBA texture data.
+///
+/// # Arguments
+///
+/// * `texture_data` - A byte slice containing the raw texture data.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the decoded RGBA data.
+///
+pub fn decode_a8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
+    println!("Decoding as A8");
+
+    let bytes_per_pixel = 1;
+    let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
+    let mut src_idx: usize = 0;
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for px in SWIZZLE_LUT {
+
+                let x = px & 7;
+                let y = (px - x) >> 3;
+
+                let out_idx = ((tx + x + (height - 1 - (ty + y)) * width) * 4) as usize;
+
+                output[out_idx    ] = 0xFF;
+                output[out_idx + 1] = 0xFF;
+                output[out_idx + 2] = 0xFF;
+                output[out_idx + 3] = texture_data[src_idx];
+
+                src_idx += bytes_per_pixel;
+            }
+        }
+    }
+    output
+}
+
