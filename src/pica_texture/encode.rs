@@ -631,7 +631,7 @@ pub fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
                     continue;
                 }
 
-                let pixel = img.get_pixel(img_x, img_y).to_rgba();
+                let pixel = img.get_pixel(img_x, img_y);
 
                 let r = pixel[0] as u32;
                 let g = pixel[1] as u32;
