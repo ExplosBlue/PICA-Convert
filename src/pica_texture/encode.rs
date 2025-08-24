@@ -82,7 +82,7 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
 /// let encoded = encode_rgba8888(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128 * 4);
 /// ```
-fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as RGBA8888");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 4);
@@ -130,7 +130,7 @@ fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_rgb888(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128 * 3);
 /// ```
-fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as RGB888");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 3);
@@ -178,7 +178,7 @@ fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_rgb5551(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
-fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as RGBA5551");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
@@ -449,7 +449,7 @@ pub fn encode_hl8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_l8(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
-fn encode_l8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_l8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as L8");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
@@ -504,7 +504,7 @@ fn encode_l8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_a8(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
-fn encode_a8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_a8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as A8");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
@@ -554,7 +554,7 @@ fn encode_a8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_la44(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
-fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as LA44");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
@@ -610,7 +610,7 @@ fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_l4(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
-fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as L4");
 
     let mut output: Vec<u8> = vec![0; width as usize * height as usize];
@@ -673,7 +673,7 @@ fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// let encoded = encode_a4(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
-fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+pub fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
     println!("Encoding as A4");
 
     let mut output: Vec<u8> = vec![0; width as usize * height as usize];
