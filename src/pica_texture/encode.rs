@@ -46,6 +46,7 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
     let output_texture = match format {
         TextureFormat::RGBA8888 => encode_rgba8888(&img, width, height),
         TextureFormat::RGB888   => encode_rgb888(&img, width, height),
+        TextureFormat::RGBA5551 => encode_rgba5551(&img, width, height),
         _ => unimplemented!("Encoding for the specified format is not implemented yet"),
     };
     Ok(output_texture)
@@ -141,6 +142,61 @@ fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 
                 let pixel = img.get_pixel(img_x, img_y);
                 output.extend([pixel[2], pixel[1], pixel[0]]);
+            }
+        }
+    }
+    output
+}
+
+/// Encodes an RGBA image as RGBA5551 PICA texture data.
+///
+/// # Arguments
+///
+/// * `img` - A reference to the input image (`RgbaImage`) to encode.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the encoded RGBA5551 data.
+///
+/// # Example
+///
+/// ```rust
+/// # use image::RgbaImage;
+/// # use pica_convert::pica_texture::encode::encode_rgba5551;
+/// let img = RgbaImage::new(128, 128);
+/// let encoded = encode_rgb5551(&img, 128, 128);
+/// assert_eq!(encoded.len(), 128 * 128 * 2);
+/// ```
+fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+    println!("Encoding as RGBA5551");
+
+    let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for &px in SWIZZLE_LUT.iter() {
+
+                let x = px & 7;
+                let y = (px >> 3) & 7;
+
+                let img_x = tx + x;
+                let img_y = ty + y;
+
+                if img_x >= width || img_y >= height {
+                    continue;
+                }
+
+                let pixel = img.get_pixel(img_x, img_y);
+
+                let r = (pixel[0] >> 3) as u16;
+                let g = (pixel[1] >> 3) as u16;
+                let b = (pixel[2] >> 3) as u16;
+                let a = if pixel[3] > 127 { 1 } else { 0 } as u16;
+                let value = (r << 11) | (g << 6) | (b << 1) | a;
+
+                output.extend([(value & 0xFF) as u8, (value >> 8) as u8]);
             }
         }
     }
