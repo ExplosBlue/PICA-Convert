@@ -45,6 +45,7 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
 
     let output_texture = match format {
         TextureFormat::RGBA8888 => encode_rgba8888(&img, width, height),
+        TextureFormat::RGB888   => encode_rgb888(&img, width, height),
         _ => unimplemented!("Encoding for the specified format is not implemented yet"),
     };
     Ok(output_texture)
@@ -92,6 +93,54 @@ fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 
                 let pixel = img.get_pixel(img_x, img_y);
                 output.extend([pixel[3], pixel[2], pixel[1], pixel[0]]);
+            }
+        }
+    }
+    output
+}
+
+/// Encodes an RGBA image as RGB888 PICA texture data.
+///
+/// # Arguments
+///
+/// * `img` - A reference to the input image (`RgbaImage`) to encode.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the encoded RGB888 data.
+///
+/// # Example
+///
+/// ```rust
+/// # use image::RgbaImage;
+/// # use pica_convert::pica_texture::encode::encode_rgb888;
+/// let img = RgbaImage::new(128, 128);
+/// let encoded = encode_rgb888(&img, 128, 128);
+/// assert_eq!(encoded.len(), 128 * 128 * 3);
+/// ```
+fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
+    println!("Encoding as RGB888");
+
+    let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 3);
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for &px in SWIZZLE_LUT.iter() {
+
+                let x = px & 7;
+                let y = (px >> 3) & 7;
+
+                let img_x = tx + x;
+                let img_y = ty + y;
+
+                if img_x >= width || img_y >= height {
+                    continue;
+                }
+
+                let pixel = img.get_pixel(img_x, img_y);
+                output.extend([pixel[2], pixel[1], pixel[0]]);
             }
         }
     }
