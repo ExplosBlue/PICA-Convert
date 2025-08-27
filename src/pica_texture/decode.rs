@@ -1,6 +1,8 @@
 use image::{DynamicImage, ImageBuffer};
 
-use crate::pica_texture::{TextureFormat, util, types::SWIZZLE_LUT};
+use crate::pica_texture::etc1::{decompress_block};
+use crate::pica_texture::{TextureFormat, PicaTexture};
+use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, flip_vertical, swap64};
 
 /// Decodes raw PICA texture data into a [`DynamicImage`].
 ///
@@ -10,10 +12,7 @@ use crate::pica_texture::{TextureFormat, util, types::SWIZZLE_LUT};
 ///
 /// # Arguments
 ///
-/// * `img` - A byte slice containing the raw texture data.
-/// * `width` - The width of the texture in pixels.
-/// * `height` - The height of the texture in pixels.
-/// * `format` - The [`TextureFormat`] describing how the texture data is encoded.
+/// * `texture` - The PicaTexture to decode.
 ///
 /// # Returns
 ///
@@ -41,27 +40,32 @@ use crate::pica_texture::{TextureFormat, util, types::SWIZZLE_LUT};
 /// assert_eq!(decoded.width(), 128);
 /// assert_eq!(decoded.height(), 128);
 /// ```
-pub fn decode_texture(img: &[u8], width: u32, height: u32, format: &TextureFormat) -> Result<DynamicImage, Box<dyn std::error::Error>> {
-    println!("Decoding texture with dimensions {}x{}", width, height);
+pub fn decode_texture(texture: &PicaTexture) -> Result<DynamicImage, Box<dyn std::error::Error>> {
+    println!("Decoding texture...");
+
+    let data = texture.data();
+    let (width, height) = texture.dimensions();
+    let format = texture.format();
 
     let mut decoded_texture_data = match format {
-        TextureFormat::RGBA8888 => decode_rgba8888(img, width, height),
-        TextureFormat::RGB888   => decode_rgb888(img, width, height),
-        TextureFormat::RGBA5551 => decode_rgba5551(img, width, height),
-        TextureFormat::RGB565   => decode_rgb565(img, width, height),
-        TextureFormat::RGBA4444 => decode_rgba4444(img, width, height),
-        TextureFormat::LA88     => decode_la88(img, width, height),
-        TextureFormat::HL8      => decode_hl8(img, width, height),
-        TextureFormat::L8       => decode_l8(img, width, height),
-        TextureFormat::A8       => decode_a8(img, width, height),
-        TextureFormat::LA44     => decode_la44(img, width, height),
-        TextureFormat::L4       => decode_l4(img, width, height),
-        TextureFormat::A4       => decode_a4(img, width, height),
-        _ => unimplemented!("Decoding for the specified format is not implemented yet"),
+        TextureFormat::RGBA8888 => decode_rgba8888(data, width, height),
+        TextureFormat::RGB888   => decode_rgb888(data, width, height),
+        TextureFormat::RGBA5551 => decode_rgba5551(data, width, height),
+        TextureFormat::RGB565   => decode_rgb565(data, width, height),
+        TextureFormat::RGBA4444 => decode_rgba4444(data, width, height),
+        TextureFormat::LA88     => decode_la88(data, width, height),
+        TextureFormat::HL8      => decode_hl8(data, width, height),
+        TextureFormat::L8       => decode_l8(data, width, height),
+        TextureFormat::A8       => decode_a8(data, width, height),
+        TextureFormat::LA44     => decode_la44(data, width, height),
+        TextureFormat::L4       => decode_l4(data, width, height),
+        TextureFormat::A4       => decode_a4(data, width, height),
+        TextureFormat::ETC1     => decode_etc1(data, width, height, false),
+        TextureFormat::ETC1A4   => decode_etc1(data, width, height, true)
     };
 
     // Flip decoded texture vertically
-    util::flip_vertical(&mut decoded_texture_data, width, height);
+    flip_vertical(&mut decoded_texture_data, width, height);
 
     let decoded_image = ImageBuffer::from_raw(width, height, decoded_texture_data)
         .map(DynamicImage::ImageRgba8)
@@ -565,6 +569,74 @@ pub fn decode_a4(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
                 output[out_idx + 3] = a << 4 | a;
 
                 src_idx += bytes_per_pixel;
+            }
+        }
+    }
+    output
+}
+
+/// Decodes ETC1 PICA texture data into a `Vec<u8>` of RGBA texture data.
+///
+/// # Arguments
+///
+/// * `texture_data` - A byte slice containing the raw texture data.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+/// * `has_alpha` - Determines whether to decode alpha data included in ETC1A4 textures.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the decoded RGBA data.
+///
+pub fn decode_etc1(texture_data: &[u8], width: u32, height: u32, has_alpha: bool) -> Vec<u8> {
+    if has_alpha { println!("Decoding as etc1a4") } else  { println!("Decoding as etc1"); };
+
+    let mut output = vec![0u8; (width as usize) * (height as usize) * 4];
+    let mut src_offs = 0;
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for t in 0..4 {
+                let mut alpha_block: u64 = 0xFFFFFFFFFFFFFFFF;
+                if has_alpha {
+                    alpha_block = u64::from_le_bytes(texture_data[src_offs..src_offs+8].try_into().unwrap());
+                    src_offs += 8;
+                }
+
+                let mut color_block = texture_data[src_offs..src_offs+8].try_into().unwrap();
+                color_block = swap64(color_block);
+                src_offs += 8;
+
+                let decoded = decompress_block(&color_block, true);
+
+                for i in 0..16 {
+                    let px = XT[t] + (i % 4);
+                    let py = YT[t] + (i / 4);
+                    let dst_x = tx + px;
+                    let dst_y = ty + py;
+
+                    if dst_x >= width || dst_y >= height {
+                        continue;
+                    }
+
+                    let out_offs = (((height - 1 - dst_y) * width + dst_x) * 4) as usize;
+
+                    let r = decoded[i as usize * 4    ];
+                    let g = decoded[i as usize * 4 + 1];
+                    let b = decoded[i as usize * 4 + 2];
+
+                    output[out_offs    ] = r;
+                    output[out_offs + 1] = g;
+                    output[out_offs + 2] = b;
+
+                    if has_alpha {
+                        let shift = ((px & 3) * 4 + (py & 3)) << 2;
+                        let a = ((alpha_block >> shift) & 0xF) as u8;
+                        output[out_offs + 3] = (a << 4) | a;
+                    } else {
+                        output[out_offs + 3] = 255;
+                    }
+                }
             }
         }
     }
