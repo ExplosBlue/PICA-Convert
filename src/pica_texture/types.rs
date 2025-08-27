@@ -1,13 +1,5 @@
-pub const SWIZZLE_LUT: [u32; 64] = [
-    0,  1,  8,  9,  2,  3,  10, 11,
-    16, 17, 24, 25, 18, 19, 26, 27,
-    4,  5,  12, 13,  6,  7, 14, 15,
-    20, 21, 28, 29, 22, 23, 30, 31,
-    32, 33, 40, 41, 34, 35, 42, 43,
-    48, 49, 56, 57, 50, 51, 58, 59,
-    36, 37, 44, 45, 38, 39, 46, 47,
-    52, 53, 60, 61, 54, 55, 62, 63
-];
+use serde::{Deserialize, Serialize};
+use clap::ValueEnum;
 
 #[derive(Clone, Debug)]
 pub enum TextureFormat {
@@ -25,4 +17,43 @@ pub enum TextureFormat {
     A4,
     ETC1,
     ETC1A4
+}
+
+pub struct PicaTexture {
+    format: TextureFormat,
+    width: u32,
+    height: u32,
+    data: Vec<u8>
+}
+
+impl PicaTexture {
+    pub fn new(format: TextureFormat, width: u32, height: u32, data: Vec<u8>) -> Self {
+        Self {
+            format,
+            width,
+            height,
+            data
+        }
+    }
+
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn dimensions(&self) -> (u32, u32) {
+        (self.width, self.height)
+    }
+
+    pub fn format(&self) -> &TextureFormat {
+        &self.format
+    }
+
 }

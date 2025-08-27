@@ -1,6 +1,8 @@
 use image::{DynamicImage, GenericImageView, RgbaImage};
 
-use crate::pica_texture::types::{TextureFormat, SWIZZLE_LUT};
+use crate::pica_texture::types::{TextureFormat, PicaTexture};
+use crate::pica_texture::etc1::{self, compress_block, Etc1PackParams};
+use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, swap64};
 
 /// Encodes a [`DynamicImage`] into raw PICA texture data for a given [`TextureFormat`].
 ///
@@ -15,7 +17,7 @@ use crate::pica_texture::types::{TextureFormat, SWIZZLE_LUT};
 ///
 /// # Returns
 ///
-/// A `Vec<u8>` containing the encoded texture data on success,
+/// A PicaTexture containing the encoded texture data on success,
 /// or an error if encoding fails.
 ///
 /// # Errors
@@ -36,7 +38,7 @@ use crate::pica_texture::types::{TextureFormat, SWIZZLE_LUT};
 /// // Each pixel is 4 bytes in RGBA8888
 /// assert_eq!(encoded.len(), 32 * 32 * 4);
 /// ```
-pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<PicaTexture, Box<dyn std::error::Error>> {
     let (width, height) = img.dimensions();
     println!("Encoding texture with dimensions {}x{}", width, height);
 
@@ -56,9 +58,13 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Vec<
         TextureFormat::LA44     => encode_la44(&img, width, height),
         TextureFormat::L4       => encode_l4(&img, width, height),
         TextureFormat::A4       => encode_a4(&img, width, height),
-        _ => unimplemented!("Encoding for the specified format is not implemented yet"),
+        TextureFormat::ETC1     => encode_etc1(&img, width, height, false),
+        TextureFormat::ETC1A4   => encode_etc1(&img, width, height, true),
     };
-    Ok(output_texture)
+
+    let tex = PicaTexture::new(format.clone(), width, height, output_texture);
+
+    Ok(tex)
 }
 
 /// Encodes an RGBA image as RGBA8888 PICA texture data.
@@ -705,6 +711,94 @@ pub fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
                 output[byte_index] |= (a & 0xF) << shift;
 
                 dst_index += 1;
+            }
+        }
+    }
+    output
+}
+
+
+/// Encodes an RGBA image as ETC1 PICA texture data.
+///
+/// # Arguments
+///
+/// * `img` - A reference to the input image (`RgbaImage`) to encode.
+/// * `width` - The width of the image in pixels.
+/// * `height` - The height of the image in pixels.
+/// * `has_alpha` - Determines whether to encode as ETC1 or ETC1A4.
+///
+/// # Returns
+///
+/// A `Vec<u8>` containing the encoded ETC1 data.
+///
+/// # Example
+///
+/// ```rust
+/// # use image::RgbaImage;
+/// # use pica_convert::pica_texture::encode::encode_etc1;
+/// let img = RgbaImage::new(128, 128);
+/// let encoded = encode_etc1(&img, 128, 128, false);
+/// assert_eq!(encoded.len(), 128 * 128);
+/// ```
+pub fn encode_etc1(img: &RgbaImage, width: u32, height: u32, has_alpha: bool) -> Vec<u8> {
+    let blocks_x = width.div_ceil(4);
+    let blocks_y = height.div_ceil(4);
+    let num_blocks = blocks_x * blocks_y;
+
+    let bytes_per_block = if has_alpha { 16 } else { 8 };
+    let mut output = Vec::with_capacity((num_blocks * bytes_per_block) as usize);
+
+    let raw_pixels = img.as_raw();
+
+    for ty in (0..height).step_by(8) {
+        for tx in (0..width).step_by(8) {
+            for t in 0..4 {
+                let mut block_rgba = [0; 64];
+                let mut alpha_block: u64 = 0;
+
+                for i in 0..16 {
+                    let px = XT[t] + (i % 4);
+                    let py = YT[t] + (i / 4);
+                    let dst_x = tx + px;
+                    let dst_y = ty + py;
+                
+                    let (r, g, b, a) = if dst_x < width && dst_y < height {
+                        let idx = ((dst_y * width + dst_x) * 4) as usize;
+                        (
+                            raw_pixels[idx    ],
+                            raw_pixels[idx + 1],
+                            raw_pixels[idx + 2],
+                            raw_pixels[idx + 3],
+                        )
+                    } else {
+                        (0, 0, 0, 255)
+                    };
+
+                    let offset = (i * 4) as usize;
+                    block_rgba[offset    ] = r;
+                    block_rgba[offset + 1] = g;
+                    block_rgba[offset + 2] = b;
+                    block_rgba[offset + 3] = a;
+
+                    if has_alpha {
+                        let alpha_shift = ((px & 3) * 4 + (py & 3)) << 2;
+                        alpha_block |= (((a >> 4) & 0xF) as u64) << alpha_shift;
+                    }
+                }
+                let pack_params = Etc1PackParams {
+                    quality: etc1::quality::HIGH,
+                    dithering: 0
+                };
+
+                let compressed_color = compress_block(&block_rgba, Some(pack_params));
+
+                if has_alpha {
+                    output.extend_from_slice(&alpha_block.to_le_bytes());
+                }
+
+                let c_block = swap64(compressed_color);
+                output.extend_from_slice(&c_block);
+
             }
         }
     }
