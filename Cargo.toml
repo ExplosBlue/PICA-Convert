@@ -7,6 +7,7 @@ edition = "2024"
 base64 = "0.22.1"
 clap = { version = "4.5.45", features = ["derive"] }
 image = "0.25.6"
+rayon = "1.11.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde-xml-rs = "0.8.1"
 

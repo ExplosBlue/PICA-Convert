@@ -677,6 +677,7 @@ dependencies = [
  "cc",
  "clap",
  "image",
+ "rayon",
  "serde",
  "serde-xml-rs",
 ]
