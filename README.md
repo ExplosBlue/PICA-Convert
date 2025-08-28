@@ -50,3 +50,4 @@ See LICENSE for details.
 - [clap](https://crates.io/crates/clap) - used for arg parsing.
 - [serde_xml_rs](https://crates.io/crates/serde_xml_rs) - used for XML serialization.
 - [base64](https://crates.io/crates/base64) - used for base64 encoding/decoding.
+- [rg_etc1](https://github.com/richgel999/rg-etc1) - used for etc1 encoding/decoding/
