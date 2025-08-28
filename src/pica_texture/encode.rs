@@ -40,8 +40,6 @@ use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, swap64};
 /// ```
 pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<PicaTexture, Box<dyn std::error::Error>> {
     let (width, height) = img.dimensions();
-    println!("Encoding texture with dimensions {}x{}", width, height);
-
     // Ensure image is rgba8 before doing any encoding
     let img = img.to_rgba8();
 
