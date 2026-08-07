@@ -42,6 +42,24 @@ let decoded = decode_texture(&encoded)?;
 decoded.save("output.png")?;
 ```
 
+## Benchmarks
+
+Benchmarks use [criterion](https://crates.io/crates/criterion) and run against release builds.
+
+```sh
+# Run all benchmarks
+cargo bench
+
+# Run a specific benchmark target
+cargo bench --bench encode
+cargo bench --bench decode
+
+# Run a single benchmark
+cargo bench --bench encode -- "encode_etc1 512x512"
+```
+
+Criterion caches results between runs and reports performance changes automatically.
+
 ## License
 This project is licensed under the MIT License.
 See LICENSE for details.

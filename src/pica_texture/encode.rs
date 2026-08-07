@@ -87,7 +87,6 @@ pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<Pica
 /// assert_eq!(encoded.len(), 128 * 128 * 4);
 /// ```
 pub fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as RGBA8888");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 4);
 
@@ -135,7 +134,6 @@ pub fn encode_rgba8888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 3);
 /// ```
 pub fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as RGB888");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 3);
 
@@ -183,7 +181,6 @@ pub fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as RGBA5551");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
 
@@ -238,7 +235,6 @@ pub fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_rgb565(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as RGB565");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
 
@@ -292,7 +288,6 @@ pub fn encode_rgb565(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_rgba4444(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as RGBA4444");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
 
@@ -347,7 +342,6 @@ pub fn encode_rgba4444(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_la88(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as LA88");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
 
@@ -403,7 +397,6 @@ pub fn encode_la88(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_hl8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as HL8");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize * 2);
 
@@ -454,7 +447,6 @@ pub fn encode_hl8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
 pub fn encode_l8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as L8");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
 
@@ -509,7 +501,6 @@ pub fn encode_l8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
 pub fn encode_a8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as A8");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
 
@@ -559,7 +550,6 @@ pub fn encode_a8(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
 pub fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as LA44");
 
     let mut output: Vec<u8> = Vec::with_capacity(width as usize * height as usize);
 
@@ -615,7 +605,6 @@ pub fn encode_la44(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
 pub fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as L4");
 
     let mut output: Vec<u8> = vec![0; width as usize * height as usize];
 
@@ -678,7 +667,6 @@ pub fn encode_l4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128);
 /// ```
 pub fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
-    println!("Encoding as A4");
 
     let mut output: Vec<u8> = vec![0; width as usize * height as usize];
 

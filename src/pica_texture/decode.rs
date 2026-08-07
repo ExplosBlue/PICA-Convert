@@ -41,7 +41,6 @@ use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, flip_vertical, swap64};
 /// assert_eq!(decoded.height(), 128);
 /// ```
 pub fn decode_texture(texture: &PicaTexture) -> Result<DynamicImage, Box<dyn std::error::Error>> {
-    println!("Decoding texture...");
 
     let data = texture.data();
     let (width, height) = texture.dimensions();
@@ -87,7 +86,6 @@ pub fn decode_texture(texture: &PicaTexture) -> Result<DynamicImage, Box<dyn std
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 fn decode_rgba8888(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as RGBA8888");
 
     let bytes_per_pixel = 32 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -127,7 +125,6 @@ fn decode_rgba8888(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 fn decode_rgb888(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as RGB888");
 
     let bytes_per_pixel = 24 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -167,7 +164,6 @@ fn decode_rgb888(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 fn decode_rgba5551(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as RGBA5551");
 
     let bytes_per_pixel = 16 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -213,7 +209,6 @@ fn decode_rgba5551(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 fn decode_rgb565(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as RGB565");
 
     let bytes_per_pixel = 16 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -258,7 +253,6 @@ fn decode_rgb565(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 fn decode_rgba4444(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as RGBA4444");
 
     let bytes_per_pixel = 16 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -304,7 +298,6 @@ fn decode_rgba4444(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_la88(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as LA88");
 
     let bytes_per_pixel = 16 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -344,7 +337,6 @@ pub fn decode_la88(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_hl8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as HL8");
 
     let bytes_per_pixel = 16 / 8;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -384,7 +376,6 @@ pub fn decode_hl8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_l8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as L8");
 
     let bytes_per_pixel = 1;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -424,7 +415,6 @@ pub fn decode_l8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_a8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as A8");
 
     let bytes_per_pixel = 1;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -464,7 +454,6 @@ pub fn decode_a8(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_la44(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as LA44");
 
     let bytes_per_pixel = 1;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -504,7 +493,6 @@ pub fn decode_la44(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_l4(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as L4");
 
     let bytes_per_pixel = 1;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -546,7 +534,6 @@ pub fn decode_l4(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_a4(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
-    println!("Decoding as a4");
 
     let bytes_per_pixel = 1;
     let mut output: Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -589,8 +576,6 @@ pub fn decode_a4(texture_data: &[u8], width: u32, height: u32) -> Vec<u8> {
 /// A `Vec<u8>` containing the decoded RGBA data.
 ///
 pub fn decode_etc1(texture_data: &[u8], width: u32, height: u32, has_alpha: bool) -> Vec<u8> {
-    if has_alpha { println!("Decoding as etc1a4") } else  { println!("Decoding as etc1"); };
-
     let mut output = vec![0u8; (width as usize) * (height as usize) * 4];
     let mut src_offs = 0;
 
