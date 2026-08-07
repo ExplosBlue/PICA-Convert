@@ -29,14 +29,15 @@ use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, flip_vertical, swap64};
 /// # Examples
 ///
 /// ```
-/// use pica_convert::pica_texture::{decode_texture, TextureFormat};
+/// use pica_convert::pica_texture::{decode_texture, TextureFormat, PicaTexture};
 ///
 /// // Suppose `raw_bytes` contains valid RGBA8888 texture data.
 /// let width = 128;
 /// let height = 128;
 /// let format = TextureFormat::RGBA8888;
 ///
-/// let decoded = decode_texture(&raw_bytes, width, height, &format).unwrap();
+/// let texture = PicaTexture::new(format, width, height, vec![0; width as usize * height as usize * 4]);
+/// let decoded = decode_texture(&texture).unwrap();
 /// assert_eq!(decoded.width(), 128);
 /// assert_eq!(decoded.height(), 128);
 /// ```

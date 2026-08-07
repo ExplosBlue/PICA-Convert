@@ -60,6 +60,18 @@ cargo bench --bench encode -- "encode_etc1 512x512"
 
 Criterion caches results between runs and reports performance changes automatically.
 
+## Testing
+
+Tests cover every encoder/decoder and use known-good samples under `tests/known_good/`..
+
+```sh
+# Run all tests
+cargo test
+
+# Regenerate known-good fixtures after a deliberate format change
+PICA_REGEN_KNOWN_GOOD=1 cargo test
+```
+
 ## License
 This project is licensed under the MIT License.
 See LICENSE for details.

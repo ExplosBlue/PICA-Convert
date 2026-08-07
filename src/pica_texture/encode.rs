@@ -36,7 +36,7 @@ use crate::pica_texture::util::{XT, YT, SWIZZLE_LUT, swap64};
 /// let encoded = encode_texture(&img, &TextureFormat::RGBA8888).unwrap();
 ///
 /// // Each pixel is 4 bytes in RGBA8888
-/// assert_eq!(encoded.len(), 32 * 32 * 4);
+/// assert_eq!(encoded.data().len(), 32 * 32 * 4);
 /// ```
 pub fn encode_texture(img: &DynamicImage, format: &TextureFormat) -> Result<PicaTexture, Box<dyn std::error::Error>> {
     let (width, height) = img.dimensions();
@@ -177,7 +177,7 @@ pub fn encode_rgb888(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// # use image::RgbaImage;
 /// # use pica_convert::pica_texture::encode::encode_rgba5551;
 /// let img = RgbaImage::new(128, 128);
-/// let encoded = encode_rgb5551(&img, 128, 128);
+/// let encoded = encode_rgba5551(&img, 128, 128);
 /// assert_eq!(encoded.len(), 128 * 128 * 2);
 /// ```
 pub fn encode_rgba5551(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
@@ -724,7 +724,7 @@ pub fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// # use pica_convert::pica_texture::encode::encode_etc1;
 /// let img = RgbaImage::new(128, 128);
 /// let encoded = encode_etc1(&img, 128, 128, false);
-/// assert_eq!(encoded.len(), 128 * 128);
+/// assert_eq!(encoded.len(), 128 * 128 / 2);
 /// ```
 pub fn encode_etc1(img: &RgbaImage, width: u32, height: u32, has_alpha: bool) -> Vec<u8> {
     let blocks_x = width.div_ceil(4);
