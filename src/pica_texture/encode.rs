@@ -1,4 +1,5 @@
 use image::{DynamicImage, GenericImageView, RgbaImage};
+use rayon::prelude::*;
 
 use crate::pica_texture::types::{TextureFormat, PicaTexture};
 use crate::pica_texture::etc1::{self, compress_block, Etc1PackParams};
@@ -727,66 +728,71 @@ pub fn encode_a4(img: &RgbaImage, width: u32, height: u32) -> Vec<u8> {
 /// assert_eq!(encoded.len(), 128 * 128 / 2);
 /// ```
 pub fn encode_etc1(img: &RgbaImage, width: u32, height: u32, has_alpha: bool) -> Vec<u8> {
-    let blocks_x = width.div_ceil(4);
-    let blocks_y = height.div_ceil(4);
-    let num_blocks = blocks_x * blocks_y;
+    let tiles_x = width.div_ceil(8);
+    let tiles_y = height.div_ceil(8);
+    let num_blocks = (tiles_x * tiles_y * 4) as usize;
 
     let bytes_per_block = if has_alpha { 16 } else { 8 };
-    let mut output = Vec::with_capacity((num_blocks * bytes_per_block) as usize);
+    let mut output = vec![0u8; num_blocks * bytes_per_block];
 
     let raw_pixels = img.as_raw();
+    let tiles_x = tiles_x as usize;
 
-    for ty in (0..height).step_by(8) {
-        for tx in (0..width).step_by(8) {
-            for t in 0..4 {
-                let mut block_rgba = [0; 64];
-                let mut alpha_block: u64 = 0;
+    output
+        .par_chunks_mut(bytes_per_block)
+        .enumerate()
+        .for_each(|(block_idx, out)| {
+            let t = block_idx % 4;
+            let ty = ((block_idx / 4) / tiles_x) * 8;
+            let tx = ((block_idx / 4) % tiles_x) * 8;
 
-                for i in 0..16 {
-                    let px = XT[t] + (i % 4);
-                    let py = YT[t] + (i / 4);
-                    let dst_x = tx + px;
-                    let dst_y = ty + py;
-                
-                    let (r, g, b, a) = if dst_x < width && dst_y < height {
-                        let idx = ((dst_y * width + dst_x) * 4) as usize;
-                        (
-                            raw_pixels[idx    ],
-                            raw_pixels[idx + 1],
-                            raw_pixels[idx + 2],
-                            raw_pixels[idx + 3],
-                        )
-                    } else {
-                        (0, 0, 0, 255)
-                    };
+            let mut block_rgba = [0; 64];
+            let mut alpha_block: u64 = 0;
 
-                    let offset = (i * 4) as usize;
-                    block_rgba[offset    ] = r;
-                    block_rgba[offset + 1] = g;
-                    block_rgba[offset + 2] = b;
-                    block_rgba[offset + 3] = a;
+            for i in 0..16 {
+                let px = XT[t] + (i % 4);
+                let py = YT[t] + (i / 4);
+                let dst_x = tx as u32 + px;
+                let dst_y = ty as u32 + py;
 
-                    if has_alpha {
-                        let alpha_shift = ((px & 3) * 4 + (py & 3)) << 2;
-                        alpha_block |= (((a >> 4) & 0xF) as u64) << alpha_shift;
-                    }
-                }
-                let pack_params = Etc1PackParams {
-                    quality: etc1::quality::HIGH,
-                    dithering: 0
+                let (r, g, b, a) = if dst_x < width && dst_y < height {
+                    let idx = ((dst_y * width + dst_x) * 4) as usize;
+                    (
+                        raw_pixels[idx    ],
+                        raw_pixels[idx + 1],
+                        raw_pixels[idx + 2],
+                        raw_pixels[idx + 3],
+                    )
+                } else {
+                    (0, 0, 0, 255)
                 };
 
-                let compressed_color = compress_block(&block_rgba, Some(pack_params));
+                let offset = (i * 4) as usize;
+                block_rgba[offset    ] = r;
+                block_rgba[offset + 1] = g;
+                block_rgba[offset + 2] = b;
+                block_rgba[offset + 3] = a;
 
                 if has_alpha {
-                    output.extend_from_slice(&alpha_block.to_le_bytes());
+                    let alpha_shift = ((px & 3) * 4 + (py & 3)) << 2;
+                    alpha_block |= (((a >> 4) & 0xF) as u64) << alpha_shift;
                 }
-
-                let c_block = swap64(compressed_color);
-                output.extend_from_slice(&c_block);
-
             }
-        }
-    }
+
+            let pack_params = Etc1PackParams {
+                quality: etc1::quality::HIGH,
+                dithering: 0,
+            };
+
+            let compressed_color = compress_block(&block_rgba, Some(pack_params));
+
+            if has_alpha {
+                out[..8].copy_from_slice(&alpha_block.to_le_bytes());
+                out[8..].copy_from_slice(&swap64(compressed_color));
+            } else {
+                out.copy_from_slice(&swap64(compressed_color));
+            }
+        });
+
     output
 }
