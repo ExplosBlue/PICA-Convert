@@ -1,7 +1,4 @@
 use std::mem::MaybeUninit;
-use std::sync::Once;
-
-static INIT: Once = Once::new();
 
 #[repr(C)]
 pub struct Etc1PackParams {
@@ -9,27 +6,10 @@ pub struct Etc1PackParams {
     pub dithering: i32,
 }
 
-#[link(name = "rg_etc1_wrapper")]
+#[link(name = "etc1_wrapper")]
 unsafe extern "C" {
-    fn etc1_pack_init();
     fn etc1_compress_block(rgba_pixels: *const u32, out_block: *mut u8, params: *const Etc1PackParams) -> u32;
     fn etc1_decompress_block(etc1_block: *const u8, out_rgba: *mut u32, preserve_alpha: i32) -> i32;
-}
-
-/// Initializes the ETC1 compressor.
-/// 
-/// Must be called before compressing any blocks.
-/// 
-fn init() {
-    unsafe { etc1_pack_init() }
-}
-
-/// Ensures that the ETC1 compressor has been initialized.
-/// 
-fn ensure_initialized() {
-    INIT.call_once(|| {
-        init();
-    });
 }
 
 /// Compresses a single 4x4 block of RGBA pixels into an 8-byte ETC1 block.
@@ -43,8 +23,6 @@ fn ensure_initialized() {
 /// A `[u8; 8]` containing the compressed block.
 /// 
 pub fn compress_block(rgba: &[u8; 64], params: Option<Etc1PackParams>) -> [u8; 8] {
-    ensure_initialized();
-
     let mut out_block = [0u8; 8];
 
     let rgba32: &[u32; 16] = unsafe { &*(rgba.as_ptr() as *const [u32; 16]) };
@@ -72,8 +50,6 @@ pub fn compress_block(rgba: &[u8; 64], params: Option<Etc1PackParams>) -> [u8; 8
 /// A `[u8; 64]` containing the decompressed RGBA data.
 /// 
 pub fn decompress_block(block: &[u8; 8], preserve_alpha: bool) -> [u8; 64] {
-    ensure_initialized();
-
     let mut out: [MaybeUninit<u32>; 16] = unsafe { MaybeUninit::uninit().assume_init() };
 
     unsafe {
